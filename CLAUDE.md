@@ -3,6 +3,11 @@
 # Pipeline: GitHub issue → Claude Code (Microsoft Foundry) → PR
 # Baseline: Orix grounded-ai-dev-export (Angular + C#) + ADLC industry defaults (React + Java)
 
+## Authority
+This file **defers to the constitution + steering** (authoritative): `constitution.md`, `steering/AGENTS.md`, `steering/approved-stack.md`, `steering/compliance-rules.md`. On any conflict, those win. Deterministic enforcement: `hooks/`. The sections below are background/context, not overrides.
+
+> Note: the pipeline MVP is **React-only** (see `steering/approved-stack.md`); the multi-stack routing below is future/aspirational, not generated today.
+
 ## Purpose
 This file gives Claude Code shared project context, coding standards, and workflow guidance for the Orix ADLC pipeline.
 Keep this file concise. Detailed framework rules live under `ai-dev/`.
