@@ -52,4 +52,11 @@ check deny  "private key"        '{"tool_name":"Write","tool_input":{"file_path"
 check deny  "gh token"           '{"tool_name":"Edit","tool_input":{"file_path":"workspaces/issue-42-foo/src/k.ts","old_string":"x","new_string":"ghp_0123456789abcdef0123456789abcdef0123"}}' "$WS"
 check allow "clean content"      '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-42-foo/src/k.ts","content":"export const ok = 1"}}' "$WS"
 
+# --- Task 5: Bash sidestep ---
+check deny  "echo into .github"  '{"tool_name":"Bash","tool_input":{"command":"echo evil > .github/workflows/x.yml"}}' "$WS"
+check deny  "tee root config"    '{"tool_name":"Bash","tool_input":{"command":"echo x | tee CLAUDE.md"}}' "$WS"
+check deny  "sed -i .github"     '{"tool_name":"Bash","tool_input":{"command":"sed -i s/a/b/ .github/workflows/ci.yml"}}' "$WS"
+check deny  "secret via heredoc" '{"tool_name":"Bash","tool_input":{"command":"echo AKIAIOSFODNN7EXAMPLE > workspaces/issue-42-foo/.env"}}' "$WS"
+check allow "write in ws ok"     '{"tool_name":"Bash","tool_input":{"command":"echo ok > workspaces/issue-42-foo/src/a.ts"}}' "$WS"
+
 echo "----"; echo "PASS=$PASS FAIL=$FAIL"; [ "$FAIL" -eq 0 ]

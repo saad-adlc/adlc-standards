@@ -46,6 +46,18 @@ case "$TOOL" in
     if printf '%s' "$CMD" | grep -Eq '(^|[^[:alnum:]_])(git[[:space:]]+merge|gh[[:space:]]+pr[[:space:]]+merge)([[:space:]]|$)'; then
       deny "deny-hook: merge is reserved for the human gate"
     fi
+    if printf '%s' "$CMD" | grep -Eq '(>>?|tee([[:space:]]+-a)?[[:space:]]+)[[:space:]]*\.?/?\.github/'; then
+      deny "deny-hook: Bash write into .github/"
+    fi
+    if printf '%s' "$CMD" | grep -Eq '(>>?|tee([[:space:]]+-a)?[[:space:]]+)[[:space:]]*\.?/?(CLAUDE\.md|package\.json|tsconfig\.json|eslint\.config|vite\.config)'; then
+      deny "deny-hook: Bash write into root config"
+    fi
+    if printf '%s' "$CMD" | grep -Eq 'sed[[:space:]]+-i([[:space:]]|[^[:space:]]*[[:space:]]).*(\.github/|CLAUDE\.md)'; then
+      deny "deny-hook: in-place edit of protected path via sed"
+    fi
+    if printf '%s' "$CMD" | grep -Eq "$SECRET_RE"; then
+      deny "deny-hook: secret-like literal in Bash command"
+    fi
     allow
     ;;
   Write|Edit)
