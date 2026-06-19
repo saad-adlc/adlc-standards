@@ -28,6 +28,12 @@ case "$TOOL" in
     if printf '%s' "$CMD" | grep -Eq ':\(\)[[:space:]]*\{[[:space:]]*:[[:space:]]*\|[[:space:]]*:|mkfs|dd[[:space:]]+if=|>[[:space:]]*/dev/sd'; then
       deny "deny-hook: fork-bomb / disk-destroying command"
     fi
+    if printf '%s' "$CMD" | grep -Eq 'git[[:space:]]+push([[:space:]]+[^[:space:]]+)*[[:space:]]+(origin[[:space:]]+)?(main|master|HEAD:main|HEAD:master)([^[:alnum:]/_-]|$)'; then
+      deny "deny-hook: push to protected branch (main/master)"
+    fi
+    if printf '%s' "$CMD" | grep -Eq '(^|[^[:alnum:]_])(git[[:space:]]+merge|gh[[:space:]]+pr[[:space:]]+merge)([[:space:]]|$)'; then
+      deny "deny-hook: merge is reserved for the human gate"
+    fi
     allow
     ;;
   *)

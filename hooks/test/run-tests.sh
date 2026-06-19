@@ -28,4 +28,12 @@ check deny  "dd if="          '{"tool_name":"Bash","tool_input":{"command":"dd i
 check allow "normal npm ci"   '{"tool_name":"Bash","tool_input":{"command":"cd workspaces/issue-1-x && npm run ci"}}'
 check allow "git status"      '{"tool_name":"Bash","tool_input":{"command":"git status"}}'
 
+# --- Task 2: push / merge to main ---
+check deny  "push origin main"  '{"tool_name":"Bash","tool_input":{"command":"git push origin main"}}'
+check deny  "push HEAD:main"    '{"tool_name":"Bash","tool_input":{"command":"git push origin HEAD:main"}}'
+check deny  "push master"       '{"tool_name":"Bash","tool_input":{"command":"git push -f origin master"}}'
+check deny  "git merge"         '{"tool_name":"Bash","tool_input":{"command":"git merge feature/x"}}'
+check deny  "gh pr merge"       '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 12 --merge"}}'
+check allow "push feature"      '{"tool_name":"Bash","tool_input":{"command":"git push origin feature/issue-1-x"}}'
+
 echo "----"; echo "PASS=$PASS FAIL=$FAIL"; [ "$FAIL" -eq 0 ]
