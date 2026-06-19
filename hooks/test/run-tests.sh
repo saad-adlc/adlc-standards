@@ -64,4 +64,19 @@ SET="$HERE/../settings.template.json"
 if jq -e '.hooks.PreToolUse[0].matcher=="Bash|Write|Edit" and (.hooks.PreToolUse[0].hooks[0].command|test("pretooluse-deny.sh"))' "$SET" >/dev/null 2>&1; then
   PASS=$((PASS+1)); else FAIL=$((FAIL+1)); echo "FAIL: settings.template.json invalid or not wiring the hook"; fi
 
+# --- Code review fixes ---
+# C1: malformed tool_input must fail CLOSED (jq errors when indexing a string)
+check deny  "malformed bash input"      '{"tool_name":"Bash","tool_input":"oops"}'
+check deny  "malformed write input"     '{"tool_name":"Write","tool_input":"oops"}'
+# I1: fully-qualified / cross refspec pushes to main
+check deny  "push HEAD:refs/heads/main" '{"tool_name":"Bash","tool_input":{"command":"git push origin HEAD:refs/heads/main"}}'
+check deny  "push develop:main"         '{"tool_name":"Bash","tool_input":{"command":"git push origin develop:main"}}'
+# I2: bash redirect confinement
+check deny  "bash write other ws"       '{"tool_name":"Bash","tool_input":{"command":"echo x > workspaces/issue-9-bar/a.ts"}}' "$WS"
+check deny  "bash traversal"            '{"tool_name":"Bash","tool_input":{"command":"echo x > ../../etc/passwd"}}' "$WS"
+check allow "bash 2>/dev/null ok"       '{"tool_name":"Bash","tool_input":{"command":"npm test 2>/dev/null"}}' "$WS"
+check allow "bash write in ws ok"       '{"tool_name":"Bash","tool_input":{"command":"echo ok > workspaces/issue-42-foo/src/b.ts"}}' "$WS"
+# M1: github fine-grained PAT
+check deny  "github_pat token"          '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-42-foo/src/a.ts","content":"const t=\"github_pat_11ABCDEFG0abcdefghijklmn\""}}' "$WS"
+
 echo "----"; echo "PASS=$PASS FAIL=$FAIL"; [ "$FAIL" -eq 0 ]

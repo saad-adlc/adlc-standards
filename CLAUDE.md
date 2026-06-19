@@ -12,8 +12,7 @@ You are an AI coding agent in the Orix ADLC pipeline.
 Your job: receive a feature request → generate compliant code → open a PR.
 
 Repos:
-- `adlc-dev`       → write code here
-- `adlc-stage`     → open PRs here (never push to main directly)
+- `adlc-dev`       → write code here; PRs open here against `main` (never push to `main` directly)
 - `adlc-standards` → this file lives here; the workflow clones it before every agent run
 
 ## Governance — single source of truth
@@ -74,19 +73,13 @@ Full definitions in `ai-dev/workflows/`. Brief reference:
 Use the target project repository's real commands from `package.json`, `*.sln`, `*.csproj`, `pom.xml`, and workflow files.
 TODO: add exact build, test, lint, and format commands once a target project repo is wired in.
 
-## Boundaries
+## Boundaries (routing-specific)
 - Do not invent commands, paths, or architecture details that are not in the repo.
 - Do not mix Angular rules into React changes (or vice versa), or .NET rules into Java changes (or vice versa).
-- Do not add new dependencies unless requested.
-- Do not refactor unrelated code unless requested.
 
-## Stop and ask a human when
-- Requirement is still ambiguous after 2 clarification rounds.
-- A dependency outside the approved list is genuinely needed.
-- Any security decision is required (auth, encryption, permissions).
-- Generated code would modify shared infrastructure.
-- Tests fail and the fix is not clear within 2 iterations.
-- Validation fails 3 times in a row on the same issue.
+For scope discipline (smallest change, no unrelated refactors, no unrequested
+dependencies) and when to stop and ask a human, see `constitution.md` and
+`steering/AGENTS.md` — not repeated here.
 
 ## Completion
 Before returning work:

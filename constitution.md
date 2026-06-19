@@ -31,9 +31,10 @@ it can reach `main`.
 ## Deterministic enforcement
 
 - A `PreToolUse` deny hook blocks, before execution and regardless of
-  permission mode: writes outside the assigned `workspaces/<slug>/`, any write
-  to `.github/` or root config, push/merge to protected branches, secret-like
-  literals, and dangerous shell commands.
+  permission mode: Write/Edit outside the assigned `workspaces/<slug>/` (and
+  Bash redirects that escape it), any write to `.github/` or root config,
+  push/merge to protected branches, secret-like literals, and dangerous shell
+  commands.
 - The hook fails closed: if it cannot evaluate a call, it denies.
 
 ## Scope discipline

@@ -17,8 +17,13 @@ need steering/approved-stack.md "Future (not active)"
 need steering/compliance-rules.md "# ADLC Compliance Rules"
 need steering/compliance-rules.md "## What the governance reviewer checks"
 
-# CLAUDE.md must defer, and must NOT re-list the security rules verbatim
+# CLAUDE.md must defer, and must NOT re-list rules owned by constitution/steering
 grep -q "defers to" "$ROOT/CLAUDE.md" && grep -q "constitution.md" "$ROOT/CLAUDE.md" || { echo "MISSING: CLAUDE.md does not defer to constitution.md"; fail=1; }
 if grep -q "No hardcoded secrets, keys, tokens, or passwords." "$ROOT/CLAUDE.md"; then echo "DUP: security rule still duplicated in CLAUDE.md"; fail=1; fi
+if grep -q "^## Stop and ask a human when" "$ROOT/CLAUDE.md"; then echo "DUP: 'Stop and ask' belongs in steering/AGENTS.md, not CLAUDE.md"; fail=1; fi
+if grep -q "Do not refactor unrelated code" "$ROOT/CLAUDE.md"; then echo "DUP: scope-discipline rule duplicated in CLAUDE.md"; fail=1; fi
+if grep -q "adlc-stage" "$ROOT/CLAUDE.md"; then echo "STALE: adlc-stage (nonexistent repo) referenced in CLAUDE.md"; fail=1; fi
+# steering/AGENTS.md now owns the escalation list
+need steering/AGENTS.md "## Stop and ask a human when"
 
 [ "$fail" -eq 0 ] && echo "docs OK" || { echo "docs FAIL"; exit 1; }

@@ -16,5 +16,12 @@ code inside `workspaces/<slug>/`, and your work is opened as a PR for human revi
 - Stay inside the assigned workspace. Never touch `.github/`, root config,
   other workspaces, or the status channel except where the workflow directs.
 - Do not commit or push — the workflow handles git via safe outputs.
-- Stop and ask a human on any security decision, ambiguous requirement after
-  two clarification rounds, or a needed dependency outside the approved stack.
+
+## Stop and ask a human when
+
+- A requirement is still ambiguous after 2 clarification rounds.
+- A dependency outside the approved stack is genuinely needed.
+- Any security decision is required (auth, encryption, permissions).
+- Generated code would need to modify shared infrastructure.
+- Tests fail and the fix is not clear within 2 iterations.
+- Validation fails 3 times in a row on the same issue.
