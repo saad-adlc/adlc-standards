@@ -36,4 +36,14 @@ check deny  "git merge"         '{"tool_name":"Bash","tool_input":{"command":"gi
 check deny  "gh pr merge"       '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 12 --merge"}}'
 check allow "push feature"      '{"tool_name":"Bash","tool_input":{"command":"git push origin feature/issue-1-x"}}'
 
+# --- Task 3: workspace confinement (ws = workspaces/issue-42-foo) ---
+WS=workspaces/issue-42-foo
+check allow "write inside ws"   '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-42-foo/src/app.tsx","content":"x"}}' "$WS"
+check deny  "write other ws"    '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-9-bar/src/app.tsx","content":"x"}}' "$WS"
+check deny  "write .github"     '{"tool_name":"Write","tool_input":{"file_path":".github/workflows/evil.yml","content":"x"}}' "$WS"
+check deny  "edit root config"  '{"tool_name":"Edit","tool_input":{"file_path":"CLAUDE.md","old_string":"a","new_string":"b"}}' "$WS"
+check deny  "write repo root"   '{"tool_name":"Write","tool_input":{"file_path":"package.json","content":"x"}}' "$WS"
+check allow "no ws set, in wspc" '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-1-x/src/a.tsx","content":"x"}}'
+check deny  "no ws set, outside" '{"tool_name":"Write","tool_input":{"file_path":"README.md","content":"x"}}'
+
 echo "----"; echo "PASS=$PASS FAIL=$FAIL"; [ "$FAIL" -eq 0 ]

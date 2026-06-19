@@ -11,6 +11,16 @@ deny() {
 }
 allow() { exit 0; }
 
+path_outside_workspace() {  # returns 0 (true) if $1 is OUTSIDE the assigned workspace
+  local p="${1#./}" ws="${ADLC_WORKSPACE:-}"
+  if [ -n "$ws" ]; then
+    ws="${ws%/}"
+    case "$p" in "$ws"/*) return 1 ;; *) return 0 ;; esac
+  else
+    case "$p" in workspaces/*/*) return 1 ;; *) return 0 ;; esac
+  fi
+}
+
 command -v jq >/dev/null 2>&1 || deny "deny-hook: jq unavailable"
 INPUT="$(cat)" || deny "deny-hook: cannot read stdin"
 TOOL="$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')" || deny "deny-hook: malformed input"
@@ -33,6 +43,17 @@ case "$TOOL" in
     fi
     if printf '%s' "$CMD" | grep -Eq '(^|[^[:alnum:]_])(git[[:space:]]+merge|gh[[:space:]]+pr[[:space:]]+merge)([[:space:]]|$)'; then
       deny "deny-hook: merge is reserved for the human gate"
+    fi
+    allow
+    ;;
+  Write|Edit)
+    FILE="$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty')"
+    [ -n "$FILE" ] || deny "deny-hook: ${TOOL} without file_path"
+    case "$FILE" in
+      *.github/*|*/.github/*|.github/*) deny "deny-hook: writes to .github/ are forbidden" ;;
+    esac
+    if path_outside_workspace "$FILE"; then
+      deny "deny-hook: write outside assigned workspace ('$FILE')"
     fi
     allow
     ;;
