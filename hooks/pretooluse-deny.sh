@@ -5,6 +5,8 @@
 # Env: ADLC_WORKSPACE — the one workspace writes are confined to (Task 3).
 set -uo pipefail   # NOT -e: we route errors to explicit deny
 
+SECRET_RE='AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|ghp_[A-Za-z0-9]{36}|xox[baprs]-[0-9A-Za-z-]{10,}|(secret|token|password|api[_-]?key)[[:space:]]*[:=][[:space:]]*[A-Za-z0-9/+_-]{12,}'
+
 deny() {
   jq -nc --arg r "$1" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$r}}'
   exit 0
@@ -54,6 +56,10 @@ case "$TOOL" in
     esac
     if path_outside_workspace "$FILE"; then
       deny "deny-hook: write outside assigned workspace ('$FILE')"
+    fi
+    CONTENT="$(printf '%s' "$INPUT" | jq -r '.tool_input.content // .tool_input.new_string // empty')"
+    if printf '%s' "$CONTENT" | grep -Eq "$SECRET_RE"; then
+      deny "deny-hook: secret-like literal in file content"
     fi
     allow
     ;;

@@ -46,4 +46,10 @@ check deny  "write repo root"   '{"tool_name":"Write","tool_input":{"file_path":
 check allow "no ws set, in wspc" '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-1-x/src/a.tsx","content":"x"}}'
 check deny  "no ws set, outside" '{"tool_name":"Write","tool_input":{"file_path":"README.md","content":"x"}}'
 
+# --- Task 4: secret patterns in content ---
+check deny  "AWS key in write"  '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-42-foo/src/k.ts","content":"const k=\"AKIAIOSFODNN7EXAMPLE\""}}' "$WS"
+check deny  "private key"        '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-42-foo/src/k.ts","content":"-----BEGIN RSA PRIVATE KEY-----"}}' "$WS"
+check deny  "gh token"           '{"tool_name":"Edit","tool_input":{"file_path":"workspaces/issue-42-foo/src/k.ts","old_string":"x","new_string":"ghp_0123456789abcdef0123456789abcdef0123"}}' "$WS"
+check allow "clean content"      '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-42-foo/src/k.ts","content":"export const ok = 1"}}' "$WS"
+
 echo "----"; echo "PASS=$PASS FAIL=$FAIL"; [ "$FAIL" -eq 0 ]
