@@ -11,4 +11,10 @@ need constitution.md "## No direct merge to main"
 need constitution.md "## Deterministic enforcement"
 need constitution.md "## Definition of done"
 
+need steering/AGENTS.md "# ADLC Agent Operating Rules"
+need steering/approved-stack.md "React + TypeScript + Vite + Vitest"
+need steering/approved-stack.md "Future (not active)"
+need steering/compliance-rules.md "# ADLC Compliance Rules"
+need steering/compliance-rules.md "## What the governance reviewer checks"
+
 [ "$fail" -eq 0 ] && echo "docs OK" || { echo "docs FAIL"; exit 1; }
