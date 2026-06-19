@@ -59,4 +59,9 @@ check deny  "sed -i .github"     '{"tool_name":"Bash","tool_input":{"command":"s
 check deny  "secret via heredoc" '{"tool_name":"Bash","tool_input":{"command":"echo AKIAIOSFODNN7EXAMPLE > workspaces/issue-42-foo/.env"}}' "$WS"
 check allow "write in ws ok"     '{"tool_name":"Bash","tool_input":{"command":"echo ok > workspaces/issue-42-foo/src/a.ts"}}' "$WS"
 
+# --- Task 6: settings template is valid + wires the hook on Bash|Write|Edit ---
+SET="$HERE/../settings.template.json"
+if jq -e '.hooks.PreToolUse[0].matcher=="Bash|Write|Edit" and (.hooks.PreToolUse[0].hooks[0].command|test("pretooluse-deny.sh"))' "$SET" >/dev/null 2>&1; then
+  PASS=$((PASS+1)); else FAIL=$((FAIL+1)); echo "FAIL: settings.template.json invalid or not wiring the hook"; fi
+
 echo "----"; echo "PASS=$PASS FAIL=$FAIL"; [ "$FAIL" -eq 0 ]
