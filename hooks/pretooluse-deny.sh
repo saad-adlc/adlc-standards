@@ -14,7 +14,15 @@ deny() {
 allow() { exit 0; }
 
 path_outside_workspace() {  # returns 0 (true) if $1 is OUTSIDE the assigned workspace
-  local p="${1#./}" ws="${ADLC_WORKSPACE:-}"
+  local p="${1#./}" ws="${ADLC_WORKSPACE:-}" root="${GITHUB_WORKSPACE:-$PWD}"
+  root="${root%/}"
+  # Claude's Write/Edit tools ALWAYS pass an absolute file_path
+  # ($GITHUB_WORKSPACE/workspaces/<slug>/...). Normalize repo-root-absolute paths
+  # back to repo-relative so the confinement check below compares like with like.
+  case "$p" in "$root"/*) p="${p#"$root"/}" ;; esac
+  # Any leftover absolute path, or any parent-traversal segment, escapes the repo
+  # or hops out of the workspace — deny outright (don't let ".." sneak past the prefix).
+  case "$p" in /*|../*|*/../*|*/..|..) return 0 ;; esac
   if [ -n "$ws" ]; then
     ws="${ws%/}"
     case "$p" in "$ws"/*) return 1 ;; *) return 0 ;; esac
