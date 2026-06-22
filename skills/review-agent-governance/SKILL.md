@@ -30,9 +30,12 @@ You are the ADLC **governance reviewer**. You run in CI (`adlc-review` workflow)
 1. **Governance review comment** on the PR — a structured verdict:
    - `Decision: changes-requested | observations-only`
    - Findings grouped by severity (blocking / advisory), each with file:line and the constitution/compliance rule it relates to.
-2. **Signed audit-log entry** appended to `workspaces/<slug>/.adlc/audit.log` (one JSON line):
-   `{"ts","pr","actor":"review-agent-governance","decision","findings":N,"sha"}`
-   — committed with the agent identity so the action is attributable.
+2. **Signed audit-log entry** embedded as a marker in the governance review comment
+   (NOT a committed file — strict mode forbids `contents: write` in this gh-aw workflow):
+   `<!-- adlc-audit {"ts","pr","actor":"review-agent-governance","decision","findings":N,"sha"} -->`
+   The comment is posted by the workflow identity and is immutable in GitHub's event
+   log, so the action is attributable. (A plain workflow can later scrape these markers
+   into a JSONL export if a git-tracked audit file is ever required.)
 3. If blocking findings exist → request changes (this feeds `adlc-iterate`). Otherwise → observations only.
 
 ## Hard rules
