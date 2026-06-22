@@ -5,15 +5,15 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 HOOK="$HERE/../pretooluse-deny.sh"
 PASS=0; FAIL=0
 
-decision() { # <json> [ws] -> "deny" | "allow"
-  local json="$1" ws="${2:-}" out
-  out="$(printf '%s' "$json" | ADLC_WORKSPACE="$ws" bash "$HOOK")"
+decision() { # <json> [ws] [gw] -> "deny" | "allow"
+  local json="$1" ws="${2:-}" gw="${3:-}" out
+  out="$(printf '%s' "$json" | ADLC_WORKSPACE="$ws" GITHUB_WORKSPACE="$gw" bash "$HOOK")"
   if printf '%s' "$out" | jq -e '.hookSpecificOutput.permissionDecision=="deny"' >/dev/null 2>&1; then
     echo deny; else echo allow; fi
 }
-check() { # <expected> <desc> <json> [ws]
-  local exp="$1" desc="$2" json="$3" ws="${4:-}" got
-  got="$(decision "$json" "$ws")"
+check() { # <expected> <desc> <json> [ws] [gw]
+  local exp="$1" desc="$2" json="$3" ws="${4:-}" gw="${5:-}" got
+  got="$(decision "$json" "$ws" "$gw")"
   if [ "$got" = "$exp" ]; then PASS=$((PASS+1));
   else FAIL=$((FAIL+1)); echo "FAIL: $desc (expected $exp, got $got)"; fi
 }
@@ -78,5 +78,17 @@ check allow "bash 2>/dev/null ok"       '{"tool_name":"Bash","tool_input":{"comm
 check allow "bash write in ws ok"       '{"tool_name":"Bash","tool_input":{"command":"echo ok > workspaces/issue-42-foo/src/b.ts"}}' "$WS"
 # M1: github fine-grained PAT
 check deny  "github_pat token"          '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-42-foo/src/a.ts","content":"const t=\"github_pat_11ABCDEFG0abcdefghijklmn\""}}' "$WS"
+
+# --- Smoke #36 regression: Claude's Write/Edit tools pass ABSOLUTE paths ---
+# The runner repo root; the agent's file_path is GITHUB_WORKSPACE-prefixed and absolute.
+GW=/home/runner/work/adlc-dev/adlc-dev
+check allow "abs path inside ws"        '{"tool_name":"Write","tool_input":{"file_path":"/home/runner/work/adlc-dev/adlc-dev/workspaces/issue-42-foo/spec.md","content":"x"}}' "$WS" "$GW"
+check allow "abs path inside ws (Edit)" '{"tool_name":"Edit","tool_input":{"file_path":"/home/runner/work/adlc-dev/adlc-dev/workspaces/issue-42-foo/src/App.tsx","old_string":"a","new_string":"b"}}' "$WS" "$GW"
+check allow "abs path inside ws, no ws" '{"tool_name":"Write","tool_input":{"file_path":"/home/runner/work/adlc-dev/adlc-dev/workspaces/issue-1-x/src/a.tsx","content":"x"}}' "" "$GW"
+check deny  "abs path other ws"         '{"tool_name":"Write","tool_input":{"file_path":"/home/runner/work/adlc-dev/adlc-dev/workspaces/issue-9-bar/x.ts","content":"x"}}' "$WS" "$GW"
+check deny  "abs path escapes repo"     '{"tool_name":"Write","tool_input":{"file_path":"/etc/passwd","content":"x"}}' "$WS" "$GW"
+# Hardening: parent traversal must not sneak past the workspace prefix (was a hole)
+check deny  "rel traversal out of ws"   '{"tool_name":"Write","tool_input":{"file_path":"workspaces/issue-42-foo/../../etc/passwd","content":"x"}}' "$WS"
+check deny  "abs traversal out of ws"   '{"tool_name":"Write","tool_input":{"file_path":"/home/runner/work/adlc-dev/adlc-dev/workspaces/issue-42-foo/../../../etc/passwd","content":"x"}}' "$WS" "$GW"
 
 echo "----"; echo "PASS=$PASS FAIL=$FAIL"; [ "$FAIL" -eq 0 ]
