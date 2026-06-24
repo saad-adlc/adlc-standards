@@ -98,7 +98,14 @@ Tell the user the issue number and URL, and that the build has started.
 
 ## Step 5 — Narrate the build live
 
-Now poll for progress and narrate it in **plain business language** — never file paths,
+**First, confirm the build actually started** — don't narrate a build that isn't running.
+Within ~60s of labelling, a workflow run named **ADLC Generate** should be running for this
+issue, and the hand-rolled **ADLC — Generate Feature** should show *skipped* (exactly one
+generator — never both). If **nothing** starts, the label didn't trigger it: re-check the
+issue is in `saad-adlc/adlc-dev` and the label is exactly `adlc-generate` (and that it
+actually got added). Fix that and retry before you narrate anything.
+
+Then poll for progress and narrate it in **plain business language** — never file paths,
 tool names, error codes, or coverage numbers. Poll an observable signal roughly every
 ~45s, and emit **one new line per real state change**. The liveness comes mostly from
 native GitHub events, which arrive on their own across ~15-20 minutes:
