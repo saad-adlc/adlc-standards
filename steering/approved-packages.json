@@ -1,0 +1,36 @@
+{
+  "_comment": "ADLC approved-packages allow-list (default-deny). Single source of truth for the deterministic validator (hooks/check-approved-packages.sh) and the generate agent. Derived from ai-dev/rules/react/style.md + the generate scaffold + the approved alternatives (date-fns, lodash-es). New packages require an Adastra+Orix-signed-off PR per ai-dev/GOVERNANCE-NOTES.md. CVE/GPL are enforced dynamically by Dependabot + a license check (WS5), not by this static list. This validates DIRECT deps only (dependencies + devDependencies), not transitive lockfile entries.",
+  "allowed": {
+    "runtime": [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "axios",
+      "zustand",
+      "@tanstack/react-query",
+      "date-fns",
+      "lodash-es"
+    ],
+    "dev": [
+      "typescript",
+      "vite",
+      "@vitejs/plugin-react",
+      "vitest",
+      "@vitest/coverage-v8",
+      "jsdom",
+      "@testing-library/react",
+      "@testing-library/jest-dom",
+      "eslint",
+      "@eslint/js",
+      "typescript-eslint",
+      "globals",
+      "@types/react",
+      "@types/react-dom",
+      "@playwright/test"
+    ]
+  },
+  "banned": [
+    "moment",
+    "lodash"
+  ]
+}
