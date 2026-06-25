@@ -9,13 +9,19 @@ The only approved stack for generated applications:
 - **Vitest** + Testing Library (tests, coverage ≥ 80% lines)
 - **ESLint** (flat config), `tsc --noEmit` (typecheck)
 
+The authoritative, machine-readable **package allow-list** is `approved-packages.json` (this
+directory) — it adds the Orix-approved app libraries (`react-router-dom`, `axios`, `zustand`,
+`@tanstack/react-query`), installed **on demand** when a spec needs them (controlled installs,
+WS8), and is enforced **default-deny** by `adlc-ci`. Detailed React/global coding rules live in
+`ai-dev/rules/`.
+
 No database, no external integrations in generated apps (MVP scope).
 
 ## Banned
 
 - `moment` (use `Intl`/`date-fns` only if the spec requires dates)
 - full `lodash` (import specific functions if genuinely needed)
-- any package not required by the spec
+- any package **not on `approved-packages.json`** (default-deny — `adlc-ci` rejects unlisted deps)
 
 ## Future (not active)
 
