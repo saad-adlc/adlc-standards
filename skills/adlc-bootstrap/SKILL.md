@@ -107,25 +107,36 @@ actually got added). Fix that and retry before you narrate anything.
 
 Then poll for progress and narrate it in **plain business language** — never file paths,
 tool names, error codes, or coverage numbers. Poll an observable signal roughly every
-~45s, and emit **one new line per real state change**. The liveness comes mostly from
-native GitHub events, which arrive on their own across ~15-20 minutes:
+~45s, and emit **one new line per real state change**. Two signals drive the liveness:
+**native GitHub events** (the PR appears, checks run, checks go green) which arrive on
+their own across ~15-20 minutes, and **the single ADLC status comment** on the PR — one
+comment carrying the hidden marker `<!-- adlc-status -->`, updated *in place* as the build
+moves through its stages. Read that comment each poll for the current stage and its
+one-line, plain-English detail (relay the detail; use the stage to spot terminal states):
 
 | What you observe (via MCP) | What you tell the user |
 |---|---|
 | the `adlc-generate` run is running, no PR yet | "Setting up your workspace and writing the app — tests first…" |
 | a PR appears whose branch is `feature/issue-<N>-<slug>` | "Built and packaged — running automated quality checks." |
-| its checks are running | "Running quality checks…" |
-| checks green + a preview comment / Pages deployment appears | "Ready — here's your live preview: ‹link›" |
-| an `adlc-iterate` label / new fix commits | "Making that change — attempt N of 3…" |
-| status shows `escalated` or `deploy-failed` | stop; "I've hit a limit on this — engineering will take it from here." |
+| the status comment / checks show checks running | "Running quality checks…" |
+| the status comment reads `clean` then `deploying`, and the dedicated 🔍 preview comment appears | "Ready — here's your live preview: ‹link›" |
+| an `adlc-iterate` label / the status comment reads `iterating` | "Making that change — attempt N of 3…" |
+| the status comment's stage is `escalated` or `deploy-failed` | stop; "I've hit a limit on this — engineering will take it from here." |
 
 Rules:
-- **Get the preview link from the authoritative source** — `workspaces/<slug>/.adlc/status.json`
-  `preview_url`, or the preview comment on the PR. **Never hand-construct the URL.**
+- **Two comments, two jobs.** The `<!-- adlc-status -->` **status comment** carries the
+  lifecycle (stage + plain-English detail) and is updated in place — read it for "where are
+  we now". The separate **🔍 preview comment** carries the clickable live-preview URL.
+- **Get the preview link only from the dedicated 🔍 preview comment** on the PR. **Never
+  hand-construct the URL**, and don't expect it in the status comment (that one tracks the
+  stage, not the link). *(`workspaces/<slug>/.adlc/status.json` is now only the initial
+  git-tracked record — it is no longer updated during the build, so don't poll it for live
+  status or the URL.)*
 - You're bounded by the turn model: poll a handful of times (~6-8) per turn, then hand the
   user a short **status card** (current stage + what's next). When they ask "how's it
   going?", run the next round. A full build is ~15-20 min, so handing off mid-build is normal.
-- On the terminal **preview-deployed** state, surface the clickable preview and stop.
+- On the terminal **preview-deployed** state (status comment) with the 🔍 preview comment
+  present, surface the clickable preview and stop.
 - On `escalated`/`deploy-failed`, stop the loop and give the right next action — don't loop
   forever saying "still working".
 
